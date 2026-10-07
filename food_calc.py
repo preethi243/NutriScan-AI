@@ -3,26 +3,19 @@ from dotenv import load_dotenv
 import streamlit as st
 import os
 from PIL import Image
-import google.generativeai as genai
-
+from google import genai
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 # --- Gemini functions ---
 def get_gemini_response(input_text, image, prompt):
-    model = genai.GenerativeModel('gemini-1.5-flash') 
-    response = model.generate_content([input_text, image[0], prompt])
+    response = client.models.generate_content(
+        model="gemini-3.8-flash",
+        contents=[input_text, image, prompt]    )
     return response.text
-
 
 def input_image_setup(uploaded_file):
     if uploaded_file is not None:
-        bytes_data = uploaded_file.getvalue()
-        image_parts = [{
-            "mime_type": uploaded_file.type,
-            "data": bytes_data
-        }]
-        return image_parts
+        return Image.open(uploaded_file)
     else:
         raise FileNotFoundError("No file uploaded")
 
@@ -35,8 +28,7 @@ uploaded_file = st.file_uploader("Choose a food image...", type=["jpg", "jpeg", 
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-
+    st.image(image, caption="Uploaded Image", width="stretch")  
 submit = st.button("🍽️ Tell me the total calories")
 
 # --- Prompt ---
